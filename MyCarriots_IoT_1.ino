@@ -115,14 +115,29 @@ void loop()
   // Test for timeout
   if (millis() > timer1 + SERVER_UPDATE_TIME)
   {
+    // Read all sensors
     readAllSensors();
+
+    // Print read data
     printAllSenors();
+
+    // Send data to servser
     sendCarriotsStream();
+
+    // Reset vibro sensor
+    myEnc.write(0);
+
+    // Reset timeout timer
     timer1 = millis();
   }
 
+  // Vibro sensor
+  vibro1 = myEnc.read();
+   
   // Reset watchdog timer
   Watchdog.reset();
+
+  delay(10);
 }
 
 void sendCarriotsStream()
@@ -256,7 +271,7 @@ void readAllSensors()
   Watchdog.reset();
 
   // Vibro sensor
-  vibro1 = myEnc.read();
+  //vibro1 = myEnc.read();
 
   // Analog sensors
   float sens1 = analogRead(GasSensorPIN);
