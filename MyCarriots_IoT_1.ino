@@ -6,7 +6,6 @@
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BMP085_U.h>
 #include <Adafruit_HMC5883_U.h>
-#include <Adafruit_SleepyDog.h>
 
 const String APIKEY = "97f31f8321a8df31ed5efbb4f3e22072d5732d1b5d075f5d3ee85f74115d1716";
 const String DEVICE = "defaultDevice@vrxfile.vrxfile";
@@ -67,13 +66,6 @@ void setup()
   Serial.begin(9600);
   Serial.println("-= Carriots data client =-\n");
 
-  // Watchdog
-  int countdownMS = Watchdog.enable(8000);
-  Serial.print("Enabled the watchdog with max countdown of ");
-  Serial.print(countdownMS, DEC);
-  Serial.println(" milliseconds!");
-  Serial.println();
-
   // Ethernet ENC28J60
   if (Ethernet.begin(mac) == 0)
   {
@@ -90,9 +82,6 @@ void setup()
   Serial.println(Ethernet.dnsServerIP());
   Serial.println("");
 
-  // Reset watchdog timer
-  Watchdog.reset();
-
   // DHT11
   dht.begin();
 
@@ -105,9 +94,6 @@ void setup()
   if (!mag.begin()) {
     Serial.println("Could not find a valid HMC5883L sensor!");
   }
-
-  // Reset watchdog timer
-  Watchdog.reset();
 }
 
 void loop()
@@ -134,9 +120,6 @@ void loop()
   // Vibro sensor
   vibro1 = myEnc.read();
    
-  // Reset watchdog timer
-  Watchdog.reset();
-
   delay(10);
 }
 
@@ -144,9 +127,6 @@ void sendCarriotsStream()
 {
   if (client.connect(carriots_server, 80))
   {
-    // Reset watchdog timer
-    Watchdog.reset();
-
     if (client.connected())
     {
       Serial.println("Sending data to Carriots server...\n");
@@ -196,19 +176,10 @@ void sendCarriotsStream()
       client.println();
       client.println(json_data);
 
-      // Reset watchdog timer
-      Watchdog.reset();
-
       delay(1000);
-
-      // Reset watchdog timer
-      Watchdog.reset();
 
       timer2 = millis();
       while ((client.available() == 0) && (millis() < timer2 + TIMEOUT));
-
-      // Reset watchdog timer
-      Watchdog.reset();
 
       while (client.available() > 0)
       {
@@ -217,22 +188,13 @@ void sendCarriotsStream()
       }
       Serial.println("\n");
 
-      // Reset watchdog timer
-      Watchdog.reset();
-
       client.stop();
-
-      // Reset watchdog timer
-      Watchdog.reset();
     }
   }
 }
 
 void readAllSensors()
 {
-  // Reset watchdog timer
-  Watchdog.reset();
-
   // DHT11
   h1 = dht.readHumidity();
   t1 = dht.readTemperature();
@@ -244,21 +206,15 @@ void readAllSensors()
     hic1 = dht.computeHeatIndex(t1, h1, false);
   }
 
-  // Reset watchdog timer
-  Watchdog.reset();
-
   // BMP085
   sensors_event_t p_event;
   bmp.getEvent(&p_event);
   if (p_event.pressure) {
     p1 = p_event.pressure;
-    t2; bmp.getTemperature(&t2);
+    bmp.getTemperature(&t2);
     float seaLevelPressure = SENSORS_PRESSURE_SEALEVELHPA;
     alt1 = bmp.pressureToAltitude(seaLevelPressure, p_event.pressure);
   }
-
-  // Reset watchdog timer
-  Watchdog.reset();
 
   // HMC5883L
   sensors_event_t m_event;
@@ -266,9 +222,6 @@ void readAllSensors()
   mx1 = m_event.magnetic.x;
   my1 = m_event.magnetic.y;
   mz1 = m_event.magnetic.z;
-
-  // Reset watchdog timer
-  Watchdog.reset();
 
   // Vibro sensor
   //vibro1 = myEnc.read();
@@ -282,16 +235,10 @@ void readAllSensors()
   flame1 = (1023.00 - sens2) / 1023.00 * 100.00;
   sound1 = sens3 / 1023.00 * 100.00;
   light1 = (1023.00 - sens4) / 1023.00 * 100.00;
-
-  // Reset watchdog timer
-  Watchdog.reset();
 }
 
 void printAllSenors()
 {
-  // Reset watchdog timer
-  Watchdog.reset();
-
   Serial.print("Temperature1: ");
   Serial.print(t1);
   Serial.println(" *C");
@@ -335,8 +282,5 @@ void printAllSenors()
   Serial.print(vibro1);
   Serial.println(" counts");
   Serial.println("");
-
-  // Reset watchdog timer
-  Watchdog.reset();
 }
 
