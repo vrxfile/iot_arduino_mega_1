@@ -39,6 +39,7 @@ EthernetClient client;
 
 unsigned long timer1 = 0;
 unsigned long timer2 = 0;
+unsigned long timer1_counter = 0;
 
 int failedResponse = 0;
 
@@ -56,6 +57,8 @@ Adafruit_HMC5883_Unified mag = Adafruit_HMC5883_Unified(12345);
 #define VibroSensorPIN 7
 
 Encoder myEnc(VibroSensorPIN, VibroSensorPIN);
+
+#define LEDPIN 13
 
 float h1 = 0;
 float t1 = 0;
@@ -96,6 +99,9 @@ void setup()
   pinMode(A13, INPUT);
   pinMode(A14, INPUT);
   pinMode(A15, INPUT);
+
+  // Init LED pin
+  pinMode(LEDPIN, OUTPUT);
 
   // Ethernet ENC28J60
   if (Ethernet.begin(mac) == 0)
@@ -144,6 +150,19 @@ void setup()
   if (!mag.begin()) {
     Serial.println("Could not find a valid HMC5883L sensor!");
   }
+
+  // Timer 1 interrupt (for custom WatchDog)
+  noInterrupts();           // disable all interrupts
+  TCCR1A = 0;
+  TCCR1B = 0;
+  // Set timer1_counter to the correct value for our interrupt interval
+  //timer1_counter = 64911;   // preload timer 65536-16MHz/256/100Hz
+  //timer1_counter = 64286;   // preload timer 65536-16MHz/256/50Hz
+  timer1_counter = 34286;   // preload timer 65536-16MHz/256/2Hz
+  TCNT1 = timer1_counter;   // preload timer
+  TCCR1B |= (1 << CS12);    // 256 prescaler
+  TIMSK1 |= (1 << TOIE1);   // enable timer overflow interrupt
+  interrupts();             // enable all interrupts
 }
 
 // Main loop
@@ -386,3 +405,9 @@ void sendNTPpacket(IPAddress &address)
   Udp.endPacket();
 }
 
+// Interrupt service routine for timer1 overflow
+ISR(TIMER1_OVF_vect)
+{
+  TCNT1 = timer1_counter;   // preload timer
+  digitalWrite(LEDPIN, digitalRead(LEDPIN) ^ 1);
+}
