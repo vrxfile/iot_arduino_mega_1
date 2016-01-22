@@ -3,6 +3,7 @@
 #include <Wire.h>
 #include <Encoder.h>
 #include <TimeLib.h>
+#include <DS3232RTC.h>
 #include <LiquidCrystal_I2C.h>
 #include <UIPEthernet.h>
 #include <Adafruit_Sensor.h>
