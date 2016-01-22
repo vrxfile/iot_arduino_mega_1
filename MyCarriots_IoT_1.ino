@@ -79,6 +79,24 @@ void setup()
   Serial.begin(9600);
   Serial.println("-= Carriots data client =-\n");
 
+  // Init analog PINS
+  pinMode(A0, INPUT);
+  pinMode(A1, INPUT);
+  pinMode(A2, INPUT);
+  pinMode(A3, INPUT);
+  pinMode(A4, INPUT);
+  pinMode(A5, INPUT);
+  pinMode(A6, INPUT);
+  pinMode(A7, INPUT);
+  pinMode(A8, INPUT);
+  pinMode(A9, INPUT);
+  pinMode(A10, INPUT);
+  pinMode(A11, INPUT);
+  pinMode(A12, INPUT);
+  pinMode(A13, INPUT);
+  pinMode(A14, INPUT);
+  pinMode(A15, INPUT);
+
   // Ethernet ENC28J60
   if (Ethernet.begin(mac) == 0)
   {
