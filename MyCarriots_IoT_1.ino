@@ -39,7 +39,10 @@ EthernetClient client;
 
 unsigned long timer1 = 0;
 unsigned long timer2 = 0;
-unsigned long timer1_counter = 0;
+
+#define MAX_WDT 1000 // Software watchdog 10 seconds
+unsigned long timer3_counter = 0;
+unsigned long wdt_timer = 0;
 
 int failedResponse = 0;
 
@@ -60,6 +63,8 @@ Encoder myEnc(VibroSensorPIN, VibroSensorPIN);
 
 #define LEDPIN 13
 
+#define RESETPIN 48
+
 float h1 = 0;
 float t1 = 0;
 float hic1 = 0;
@@ -78,9 +83,29 @@ long vibro1 = 0;
 // Main setup
 void setup()
 {
+  // Init RESET pin
+  pinMode(RESETPIN, INPUT);
+
+  // Init LED pin
+  pinMode(LEDPIN, OUTPUT);
+  digitalWrite(LEDPIN, HIGH);
+
   // Serial port
-  Serial.begin(9600);
-  Serial.println("-= Carriots data client =-\n");
+  Serial.begin(115200);
+  Serial.println("/* Carriots data client by Rostislav Varzar */\n");
+
+  // Timer 3 interrupt (for custom WatchDog)
+  noInterrupts();           // disable all interrupts
+  TCCR3A = 0;
+  TCCR3B = 0;
+  // Set timer1_counter to the correct value for our interrupt interval
+  timer3_counter = 64911;   // preload timer 65536-16MHz/256/100Hz
+  //timer3_counter = 64286;   // preload timer 65536-16MHz/256/50Hz
+  //timer3_counter = 34286;   // preload timer 65536-16MHz/256/2Hz
+  TCNT3 = timer3_counter;   // preload timer
+  TCCR3B |= (1 << CS12);    // 256 prescaler
+  TIMSK3 |= (1 << TOIE3);   // enable timer overflow interrupt
+  interrupts();             // enable all interrupts
 
   // Init analog PINS
   pinMode(A0, INPUT);
@@ -100,8 +125,8 @@ void setup()
   pinMode(A14, INPUT);
   pinMode(A15, INPUT);
 
-  // Init LED pin
-  pinMode(LEDPIN, OUTPUT);
+  // Reset software watchdog
+  watchdog_reset();
 
   // Ethernet ENC28J60
   if (Ethernet.begin(mac) == 0)
@@ -118,6 +143,9 @@ void setup()
   Serial.print("dnsServerIP:\t\t");
   Serial.println(Ethernet.dnsServerIP());
   Serial.println("");
+
+  // Reset software watchdog
+  watchdog_reset();
 
   // NTP init and get time
   Udp.begin(localPort);
@@ -138,6 +166,9 @@ void setup()
     Serial.println();
   }
 
+  // Reset software watchdog
+  watchdog_reset();
+
   // DHT11
   dht.begin();
 
@@ -151,18 +182,8 @@ void setup()
     Serial.println("Could not find a valid HMC5883L sensor!");
   }
 
-  // Timer 1 interrupt (for custom WatchDog)
-  noInterrupts();           // disable all interrupts
-  TCCR1A = 0;
-  TCCR1B = 0;
-  // Set timer1_counter to the correct value for our interrupt interval
-  //timer1_counter = 64911;   // preload timer 65536-16MHz/256/100Hz
-  //timer1_counter = 64286;   // preload timer 65536-16MHz/256/50Hz
-  timer1_counter = 34286;   // preload timer 65536-16MHz/256/2Hz
-  TCNT1 = timer1_counter;   // preload timer
-  TCCR1B |= (1 << CS12);    // 256 prescaler
-  TIMSK1 |= (1 << TOIE1);   // enable timer overflow interrupt
-  interrupts();             // enable all interrupts
+  // Reset software watchdog
+  watchdog_reset();
 }
 
 // Main loop
@@ -189,6 +210,9 @@ void loop()
 
   // Vibro sensor
   vibro1 = myEnc.read();
+
+  // Reset software watchdog
+  watchdog_reset();
 
   delay(10);
 }
@@ -405,9 +429,27 @@ void sendNTPpacket(IPAddress &address)
   Udp.endPacket();
 }
 
-// Interrupt service routine for timer1 overflow
-ISR(TIMER1_OVF_vect)
+// Reset software watchdog timer
+void watchdog_reset()
 {
-  TCNT1 = timer1_counter;   // preload timer
-  digitalWrite(LEDPIN, digitalRead(LEDPIN) ^ 1);
+  wdt_timer = 0;
+}
+
+// Interrupt service routine for timer1 overflow
+ISR(TIMER3_OVF_vect)
+{
+  wdt_timer = wdt_timer + 1;
+  if (wdt_timer > MAX_WDT)
+  {
+    wdt_timer = 0;
+    TIMSK3 = 0;
+    TCNT3 = 0;
+    TCCR3A = 0;
+    TCCR3B = 0;
+    Serial.println("WDT! Resetting...\n");
+    delay(1000);
+    pinMode(RESETPIN, OUTPUT);
+    digitalWrite(RESETPIN, LOW);
+  }
+  TCNT3 = timer3_counter;
 }
