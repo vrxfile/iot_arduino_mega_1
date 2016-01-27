@@ -9,6 +9,8 @@
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BMP085_U.h>
 #include <Adafruit_HMC5883_U.h>
+#include <Adafruit_ADXL345_U.h>
+#include <EEPROM24LC256_512.h>
 
 const String APIKEY = "97f31f8321a8df31ed5efbb4f3e22072d5732d1b5d075f5d3ee85f74115d1716";
 const String DEVICE = "defaultDevice@vrxfile.vrxfile";
