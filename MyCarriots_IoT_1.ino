@@ -357,11 +357,13 @@ void readAllSensors()
   float sens3 = analogRead(SoundSensorPIN);
   float sens4 = analogRead(LightSensorPIN);
   float sens5 = analogRead(CurrentSensorPIN);
-  float sens6 = analogRead(VoltageSensorPIN);    
+  float sens6 = analogRead(VoltageSensorPIN);
   gas1 = sens1 / 1023.00 * 100.00;
   flame1 = (1023.00 - sens2) / 1023.00 * 100.00;
   sound1 = sens3 / 1023.00 * 100.00;
   light1 = (1023.00 - sens4) / 1023.00 * 100.00;
+  current1 = sens5 / 1023.00 * 5.00 / 0.185;
+  voltage1 = sens6 / 1023.00 * 25.00;
 }
 
 // Print sensors data to terminal
@@ -415,6 +417,12 @@ void printAllSenors()
   Serial.print("Light detection : ");
   Serial.print(light1);
   Serial.println(" %");
+  Serial.print("Input voltage : ");
+  Serial.print(voltage1);
+  Serial.println(" V");
+  Serial.print("Power consumption : ");
+  Serial.print(current1);
+  Serial.println(" A");
   Serial.print("Vibration detection : ");
   Serial.print(vibro1);
   Serial.println(" counts");
