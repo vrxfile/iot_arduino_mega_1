@@ -53,19 +53,23 @@ int failedResponse = 0;
 DHT dht(DHTPIN, DHTTYPE);
 
 Adafruit_BMP085_Unified bmp = Adafruit_BMP085_Unified(10085);
-Adafruit_HMC5883_Unified mag = Adafruit_HMC5883_Unified(12345);
+Adafruit_HMC5883_Unified mag = Adafruit_HMC5883_Unified(15883);
+Adafruit_ADXL345_Unified accel = Adafruit_ADXL345_Unified(10345);
 
 #define GasSensorPIN A0
 #define FlameSensorPIN A1
 #define SoundSensorPIN A2
 #define LightSensorPIN A3
+#define CurrentSensorPIN A4
+#define VoltageSensorPIN A5
 #define VibroSensorPIN 7
 
 Encoder myEnc(VibroSensorPIN, VibroSensorPIN);
 
 #define LEDPIN 13
-
 #define RESETPIN 48
+#define RSTETHPIN 49
+#define RELAYPIN 10
 
 float h1 = 0;
 float t1 = 0;
@@ -76,6 +80,9 @@ float alt1 = 0;
 float mx1 = 0;
 float my1 = 0;
 float mz1 = 0;
+float ax1 = 0;
+float ay1 = 0;
+float az1 = 0;
 float gas1 = 0;
 float flame1 = 0;
 float sound1 = 0;
@@ -182,6 +189,17 @@ void setup()
   // HMC5883L
   if (!mag.begin()) {
     Serial.println("Could not find a valid HMC5883L sensor!");
+  }
+
+  // ADXL345
+  if (!accel.begin())
+  {
+    Serial.println("Could not find a valid ADXL345 sensor!");
+  }
+  else
+  {
+    accel.setRange(ADXL345_RANGE_2_G);
+    accel.setDataRate(ADXL345_DATARATE_0_10_HZ);
   }
 
   // Reset software watchdog
@@ -321,6 +339,13 @@ void readAllSensors()
   my1 = m_event.magnetic.y;
   mz1 = m_event.magnetic.z;
 
+  // ADXL345
+  sensors_event_t a_event;
+  accel.getEvent(&a_event);
+  ax1 = a_event.acceleration.x;
+  ay1 = a_event.acceleration.y;
+  az1 = a_event.acceleration.z;
+
   // Vibro sensor
   //vibro1 = myEnc.read();
 
@@ -365,6 +390,15 @@ void printAllSenors()
   Serial.print("Magnetic vector Z: ");
   Serial.print(mz1);
   Serial.println(" uT");
+  Serial.print("Acceleration vector X: ");
+  Serial.print(ax1);
+  Serial.println(" m/s^2");
+  Serial.print("Acceleration vector Y: ");
+  Serial.print(ay1);
+  Serial.println(" m/s^2");
+  Serial.print("Acceleration vector Z: ");
+  Serial.print(az1);
+  Serial.println(" m/s^2");
   Serial.print("Gas concentration: ");
   Serial.print(gas1);
   Serial.println(" %");
