@@ -87,6 +87,8 @@ float gas1 = 0;
 float flame1 = 0;
 float sound1 = 0;
 float light1 = 0;
+float current1 = 0;
+float voltage1 = 0;
 long vibro1 = 0;
 
 // Main setup
@@ -354,6 +356,8 @@ void readAllSensors()
   float sens2 = analogRead(FlameSensorPIN);
   float sens3 = analogRead(SoundSensorPIN);
   float sens4 = analogRead(LightSensorPIN);
+  float sens5 = analogRead(CurrentSensorPIN);
+  float sens6 = analogRead(VoltageSensorPIN);    
   gas1 = sens1 / 1023.00 * 100.00;
   flame1 = (1023.00 - sens2) / 1023.00 * 100.00;
   sound1 = sens3 / 1023.00 * 100.00;
@@ -438,7 +442,7 @@ time_t getNtpTime()
       return secsSince1900 - 2208988800UL + timeZone * SECS_PER_HOUR;
     }
   }
-  Serial.println("No NTP Response :-(");
+  Serial.println("No NTP Response!");
   return 0; // return 0 if unable to get the time
 }
 
