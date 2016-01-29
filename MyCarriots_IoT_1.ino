@@ -273,6 +273,8 @@ void loop()
   // Main timeout
   if (millis() > timer_main + SERVER_UPDATE_TIME)
   {
+    // Calculate average data for sensors
+    calc_sensors();
     // Print data from sensors
     printAllSenors();
     // Send data to servser
