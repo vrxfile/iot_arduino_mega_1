@@ -15,7 +15,13 @@
 const String APIKEY = "97f31f8321a8df31ed5efbb4f3e22072d5732d1b5d075f5d3ee85f74115d1716";
 const String DEVICE = "defaultDevice@vrxfile.vrxfile";
 
-#define SERVER_UPDATE_TIME 60000         // Update Carriots data server every 60000 ms (1 minute)
+#define SERVER_UPDATE_TIME 60000  // Update Carriots data server every 60000 ms (1 minute)
+#define DHT_UPDATE_TIME 3000      // Update time for DHT sensors             
+#define BMP_UPDATE_TIME 1000      // Update time for pressure sensors             
+#define HMC_UPDATE_TIME 1000      // Update time for magnetic sensors             
+#define ACC_UPDATE_TIME 1000      // Update time for acceleration sensors             
+#define ANALOG_UPDATE_TIME 5      // Update time for analog sensors             
+#define VIBRO_UPDATE_TIME 5       // Update time for vibro sensors             
 
 #define TIMEOUT 1000 // 1 second timout
 
@@ -39,8 +45,23 @@ byte packetBuffer[NTP_PACKET_SIZE]; //buffer to hold incoming & outgoing packets
 
 EthernetClient client;
 
-unsigned long timer1 = 0;
-unsigned long timer2 = 0;
+unsigned long timer_main = 0;
+unsigned long timer_carriots = 0;
+unsigned long timer_dht11 = 0;
+unsigned long timer_hmc5883l = 0;
+unsigned long timer_bmp085 = 0;
+unsigned long timer_adxl345 = 0;
+unsigned long timer_analog = 0;
+unsigned long timer_vibro = 0;
+
+unsigned long counter_main = 0;
+unsigned long counter_carriots = 0;
+unsigned long counter_dht11 = 0;
+unsigned long counter_hmc5883l = 0;
+unsigned long counter_bmp085 = 0;
+unsigned long counter_adxl345 = 0;
+unsigned long counter_analog = 0;
+unsigned long counter_vibro = 0;
 
 #define MAX_WDT 1000 // Software watchdog 10 seconds
 unsigned long timer3_counter = 0;
@@ -89,7 +110,45 @@ float sound1 = 0;
 float light1 = 0;
 float current1 = 0;
 float voltage1 = 0;
-long vibro1 = 0;
+float vibro1 = 0;
+float sum_h1 = 0;
+float sum_t1 = 0;
+float sum_hic1 = 0;
+float sum_p1 = 0;
+float sum_t2 = 0;
+float sum_alt1 = 0;
+float sum_mx1 = 0;
+float sum_my1 = 0;
+float sum_mz1 = 0;
+float sum_ax1 = 0;
+float sum_ay1 = 0;
+float sum_az1 = 0;
+float sum_gas1 = 0;
+float sum_flame1 = 0;
+float sum_sound1 = 0;
+float sum_light1 = 0;
+float sum_current1 = 0;
+float sum_voltage1 = 0;
+float sum_vibro1 = 0;
+float avg_h1 = 0;
+float avg_t1 = 0;
+float avg_hic1 = 0;
+float avg_p1 = 0;
+float avg_t2 = 0;
+float avg_alt1 = 0;
+float avg_mx1 = 0;
+float avg_my1 = 0;
+float avg_mz1 = 0;
+float avg_ax1 = 0;
+float avg_ay1 = 0;
+float avg_az1 = 0;
+float avg_gas1 = 0;
+float avg_flame1 = 0;
+float avg_sound1 = 0;
+float avg_light1 = 0;
+float avg_current1 = 0;
+float avg_voltage1 = 0;
+float avg_vibro1 = 0;
 
 // Main setup
 void setup()
@@ -211,32 +270,88 @@ void setup()
 // Main loop
 void loop()
 {
-  // Test for timeout
-  if (millis() > timer1 + SERVER_UPDATE_TIME)
+  // Main timeout
+  if (millis() > timer_main + SERVER_UPDATE_TIME)
   {
-    // Read all sensors
-    readAllSensors();
-
-    // Print read data
+    // Print data from sensors
     printAllSenors();
-
     // Send data to servser
     sendCarriotsStream();
-
-    // Reset vibro sensor
-    myEnc.write(0);
-
+    // Reset variables and counters
+    reset_cnt_var();
     // Reset timeout timer
-    timer1 = millis();
+    timer_main = millis();
+    counter_main ++;
   }
 
-  // Vibro sensor
-  vibro1 = myEnc.read();
+  // DHT sensors timeout
+  if (millis() > timer_dht11 + DHT_UPDATE_TIME)
+  {
+    readDHT();
+    sum_t1 += t1;
+    sum_h1 += h1;
+    sum_hic1 += hic1;
+    counter_dht11 ++;
+    timer_dht11 = millis();
+  }
+
+  // Pressure sensors timeout
+  if (millis() > timer_bmp085 + BMP_UPDATE_TIME)
+  {
+    readBMP();
+    sum_p1 += p1;
+    sum_t2 += t2;
+    sum_alt1 += alt1;
+    counter_bmp085 ++;
+    timer_bmp085 = millis();
+  }
+
+  // Magnetic sensors timeout
+  if (millis() > timer_hmc5883l + HMC_UPDATE_TIME)
+  {
+    readHMC();
+    sum_mx1 += mx1;
+    sum_my1 += my1;
+    sum_mz1 += mz1;
+    counter_hmc5883l ++;
+    timer_hmc5883l = millis();
+  }
+
+  // Acceleration sensors timeout
+  if (millis() > timer_adxl345 + ACC_UPDATE_TIME)
+  {
+    readACC();
+    sum_ax1 += ax1;
+    sum_ay1 += ay1;
+    sum_az1 += az1;
+    counter_adxl345 ++;
+    timer_adxl345 = millis();
+  }
+
+  // Analog sensors timeout
+  if (millis() > timer_analog + ANALOG_UPDATE_TIME)
+  {
+    readANALOG();
+    sum_flame1 += flame1;
+    sum_light1 += light1;
+    sum_gas1 += gas1;
+    sum_sound1 += sound1;
+    sum_current1 += current1;
+    sum_voltage1 += voltage1;
+    counter_analog ++;
+    timer_analog = millis();
+  }
+
+  // Vibro sensors timeout
+  if (millis() > timer_vibro + VIBRO_UPDATE_TIME)
+  {
+    readVIBRO();
+    counter_vibro ++;
+    timer_vibro = millis();
+  }
 
   // Reset software watchdog
   watchdog_reset();
-
-  delay(10);
 }
 
 // Send IoT packet
@@ -274,7 +389,7 @@ void sendCarriotsStream()
       json_data = json_data + "\"gas\":";
       json_data = json_data + "\"" + String(gas1, 2) + "\",";
       json_data = json_data + "\"vibration\":";
-      json_data = json_data + "\"" + String(vibro1, DEC) + "\"}}";
+      json_data = json_data + "\"" + String(vibro1, 2) + "\"}}";
 
       Serial.println("Data to be send:");
       Serial.println(json_data);
@@ -295,8 +410,8 @@ void sendCarriotsStream()
 
       delay(1000);
 
-      timer2 = millis();
-      while ((client.available() == 0) && (millis() < timer2 + TIMEOUT));
+      timer_carriots = millis();
+      while ((client.available() == 0) && (millis() < timer_carriots + TIMEOUT));
 
       while (client.available() > 0)
       {
@@ -310,8 +425,8 @@ void sendCarriotsStream()
   }
 }
 
-// Read data from sensors
-void readAllSensors()
+// Read DHT sensors
+void readDHT()
 {
   // DHT11
   h1 = dht.readHumidity();
@@ -323,7 +438,22 @@ void readAllSensors()
   {
     hic1 = dht.computeHeatIndex(t1, h1, false);
   }
+}
 
+// Read magnetic sensors
+void readHMC()
+{
+  // HMC5883L
+  sensors_event_t m_event;
+  mag.getEvent(&m_event);
+  mx1 = m_event.magnetic.x;
+  my1 = m_event.magnetic.y;
+  mz1 = m_event.magnetic.z;
+}
+
+// Read pressure sensors
+void readBMP()
+{
   // BMP085
   sensors_event_t p_event;
   bmp.getEvent(&p_event);
@@ -333,24 +463,29 @@ void readAllSensors()
     float seaLevelPressure = SENSORS_PRESSURE_SEALEVELHPA;
     alt1 = bmp.pressureToAltitude(seaLevelPressure, p_event.pressure);
   }
+}
 
-  // HMC5883L
-  sensors_event_t m_event;
-  mag.getEvent(&m_event);
-  mx1 = m_event.magnetic.x;
-  my1 = m_event.magnetic.y;
-  mz1 = m_event.magnetic.z;
-
+// Read acceleration sensors
+void readACC()
+{
   // ADXL345
   sensors_event_t a_event;
   accel.getEvent(&a_event);
   ax1 = a_event.acceleration.x;
   ay1 = a_event.acceleration.y;
   az1 = a_event.acceleration.z;
+}
 
+// Read vibro sensors
+void readVIBRO()
+{
   // Vibro sensor
-  //vibro1 = myEnc.read();
+  vibro1 = myEnc.read();
+}
 
+// Read analog sensors
+void readANALOG()
+{
   // Analog sensors
   float sens1 = analogRead(GasSensorPIN);
   float sens2 = analogRead(FlameSensorPIN);
@@ -501,3 +636,38 @@ ISR(TIMER3_OVF_vect)
   }
   TCNT3 = timer3_counter;
 }
+
+// Reset all counters and vars
+void reset_cnt_var()
+{
+  // Reset vibro sensor
+  myEnc.write(0);
+  // Reset counters
+  counter_dht11 = 0;
+  counter_hmc5883l = 0;
+  counter_bmp085 = 0;
+  counter_adxl345 = 0;
+  counter_analog = 0;
+  counter_vibro = 0;
+  // Reset sums
+  sum_h1 = 0;
+  sum_t1 = 0;
+  sum_hic1 = 0;
+  sum_p1 = 0;
+  sum_t2 = 0;
+  sum_alt1 = 0;
+  sum_mx1 = 0;
+  sum_my1 = 0;
+  sum_mz1 = 0;
+  sum_ax1 = 0;
+  sum_ay1 = 0;
+  sum_az1 = 0;
+  sum_gas1 = 0;
+  sum_flame1 = 0;
+  sum_sound1 = 0;
+  sum_light1 = 0;
+  sum_current1 = 0;
+  sum_voltage1 = 0;
+  sum_vibro1 = 0;
+}
+
