@@ -671,3 +671,42 @@ void reset_cnt_var()
   sum_vibro1 = 0;
 }
 
+// Calculate average data for sensors
+void calc_sensors()
+{
+  if (counter_dht11 != 0)
+  {
+    avg_t1 = sum_t1 / counter_dht11;
+    avg_h1 = sum_h1 / counter_dht11;
+    avg_hic1 = sum_hic1 / counter_dht11;
+  }
+  if (counter_bmp085 != 0)
+  {
+    avg_p1 = sum_p1 / counter_bmp085;
+    avg_t2 = sum_t2 / counter_bmp085;
+    avg_alt1 = sum_alt1 / counter_bmp085;
+  }
+  if (counter_hmc5883l != 0)
+  {
+    avg_mx1 = sum_mx1 / counter_hmc5883l;
+    avg_my1 = sum_my1 / counter_hmc5883l;
+    avg_mz1 = sum_mz1 / counter_hmc5883l;
+  }
+  if (counter_adxl345 != 0)
+  {
+    avg_ax1 = sum_ax1 / counter_adxl345;
+    avg_ay1 = sum_ay1 / counter_adxl345;
+    avg_az1 = sum_az1 / counter_adxl345;
+  }
+  if (counter_analog != 0)
+  {
+    avg_flame1 = sum_flame1 / counter_analog;
+    avg_light1 = sum_light1 / counter_analog;
+    avg_sound1 = sum_sound1 / counter_analog;
+    avg_gas1 = sum_gas1 / counter_analog;
+    avg_current1 = sum_current1 / counter_analog;
+    avg_voltage1 = sum_voltage1 / counter_analog;
+  }
+  avg_vibro1 = vibro1;
+}
+
