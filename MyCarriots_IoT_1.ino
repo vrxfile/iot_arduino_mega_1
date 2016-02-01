@@ -69,7 +69,7 @@ unsigned long wdt_timer = 0;
 
 int failedResponse = 0;
 
-#define DHTPIN 5
+#define DHTPIN 10
 #define DHTTYPE DHT11
 DHT dht(DHTPIN, DHTTYPE);
 
@@ -83,7 +83,7 @@ Adafruit_ADXL345_Unified accel = Adafruit_ADXL345_Unified(10345);
 #define LightSensorPIN A3
 #define CurrentSensorPIN A4
 #define VoltageSensorPIN A5
-#define VibroSensorPIN 7
+#define VibroSensorPIN 11
 
 Encoder myEnc(VibroSensorPIN, VibroSensorPIN);
 
@@ -161,7 +161,7 @@ void setup()
   digitalWrite(LEDPIN, HIGH);
 
   // Serial port
-  Serial.begin(115200);
+  Serial.begin(19200);
   Serial.println("/* Carriots data client by Rostislav Varzar */\n");
 
   // Timer 3 interrupt (for custom WatchDog)
@@ -499,7 +499,7 @@ void readANALOG()
   flame1 = (1023.00 - sens2) / 1023.00 * 100.00;
   sound1 = sens3 / 1023.00 * 100.00;
   light1 = (1023.00 - sens4) / 1023.00 * 100.00;
-  current1 = sens5 / 1023.00 * 5.00 / 0.185;
+  current1 = (sens5 / 1023.00 * 5.00 - 2.50) / 0.185;
   voltage1 = sens6 / 1023.00 * 25.00;
 }
 
