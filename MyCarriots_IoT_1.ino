@@ -22,7 +22,7 @@ const String DEVICE = "defaultDevice@vrxfile.vrxfile";
 #define ACC_UPDATE_TIME 1000      // Update time for acceleration sensors
 #define ANALOG_UPDATE_TIME 5      // Update time for analog sensors
 #define VIBRO_UPDATE_TIME 5       // Update time for vibro sensors
-#define LCD_UPDATE_TIME 10000     // Update time for lcd display
+#define LCD_UPDATE_TIME 5000      // Update time for lcd display
 #define HRST_UPDATE_TIME 3600000  // Update time for full reset
 //#define HRST_UPDATE_TIME 180000  // Update time for full reset
 
@@ -397,8 +397,13 @@ void loop()
       lcd.setCursor(0, 0);  lcd_printstr("U = " + String(voltage1) + " V");
       lcd.setCursor(0, 1);  lcd_printstr("I = " + String(current1) + " A");
     }
+    if (counter_lcd == 3)
+    {
+      lcd.clear();
+      lcd.setCursor(0, 0);  lcd_printstr("CNT = " + String(counter_main));
+    }
     counter_lcd ++;
-    if (counter_lcd > 2)
+    if (counter_lcd > 3)
     {
       counter_lcd = 0;
     }
@@ -430,6 +435,8 @@ void sendCarriotsStream()
       String json_data = "{\"protocol\":\"v2\",\"device\":\"";
       json_data = json_data + DEVICE;
       json_data = json_data + "\",\"at\":\"now\",\"data\":{";
+      json_data = json_data + "\"counter_main\":";
+      json_data = json_data + "\"" + String(counter_main) + "\",";
       json_data = json_data + "\"temperature1\":";
       json_data = json_data + "\"" + String(avg_t1, 2) + "\",";
       json_data = json_data + "\"temperature2\":";
@@ -464,10 +471,8 @@ void sendCarriotsStream()
       json_data = json_data + "\"" + String(avg_gas1, 2) + "\",";
       json_data = json_data + "\"sound\":";
       json_data = json_data + "\"" + String(avg_sound1, 2) + "\",";
-      json_data = json_data + "\"counter_main\":";
-      json_data = json_data + "\"" + String(counter_main) + "\",";
       json_data = json_data + "\"vibration\":";
-      json_data = json_data + "\"" + String(avg_vibro1) + "\"}}";
+      json_data = json_data + "\"" + String(avg_vibro1, 2) + "\"}}";
 
       Serial.println("Data to be send:");
       Serial.println(json_data);
