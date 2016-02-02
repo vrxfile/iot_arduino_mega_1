@@ -23,8 +23,8 @@ const String DEVICE = "defaultDevice@vrxfile.vrxfile";
 #define ANALOG_UPDATE_TIME 5      // Update time for analog sensors
 #define VIBRO_UPDATE_TIME 5       // Update time for vibro sensors
 #define LCD_UPDATE_TIME 10000     // Update time for lcd display
-//#define HRST_UPDATE_TIME 3600000  // Update time for full reset
-#define HRST_UPDATE_TIME 180000  // Update time for full reset
+#define HRST_UPDATE_TIME 3600000  // Update time for full reset
+//#define HRST_UPDATE_TIME 180000  // Update time for full reset
 
 #define TIMEOUT 1000 // 1 second timout
 
@@ -431,29 +431,43 @@ void sendCarriotsStream()
       json_data = json_data + DEVICE;
       json_data = json_data + "\",\"at\":\"now\",\"data\":{";
       json_data = json_data + "\"temperature1\":";
-      json_data = json_data + "\"" + String(t1, 2) + "\",";
+      json_data = json_data + "\"" + String(avg_t1, 2) + "\",";
       json_data = json_data + "\"temperature2\":";
-      json_data = json_data + "\"" + String(t2, 2) + "\",";
+      json_data = json_data + "\"" + String(avg_t2, 2) + "\",";
       json_data = json_data + "\"humidity\":";
-      json_data = json_data + "\"" + String(h1, 2) + "\",";
+      json_data = json_data + "\"" + String(avg_h1, 2) + "\",";
       json_data = json_data + "\"pressure\":";
-      json_data = json_data + "\"" + String(p1, 2) + "\",";
+      json_data = json_data + "\"" + String(avg_p1, 2) + "\",";
       json_data = json_data + "\"magnetic_x\":";
-      json_data = json_data + "\"" + String(mx1, 2) + "\",";
+      json_data = json_data + "\"" + String(avg_mx1, 2) + "\",";
       json_data = json_data + "\"magnetic_y\":";
-      json_data = json_data + "\"" + String(my1, 2) + "\",";
+      json_data = json_data + "\"" + String(avg_my1, 2) + "\",";
       json_data = json_data + "\"magnetic_z\":";
-      json_data = json_data + "\"" + String(mz1, 2) + "\",";
+      json_data = json_data + "\"" + String(avg_mz1, 2) + "\",";
+      json_data = json_data + "\"acceleration_x\":";
+      json_data = json_data + "\"" + String(avg_ax1, 2) + "\",";
+      json_data = json_data + "\"acceleration_y\":";
+      json_data = json_data + "\"" + String(avg_ay1, 2) + "\",";
+      json_data = json_data + "\"acceleration_z\":";
+      json_data = json_data + "\"" + String(avg_az1, 2) + "\",";
+      json_data = json_data + "\"voltage\":";
+      json_data = json_data + "\"" + String(avg_voltage1, 2) + "\",";
+      json_data = json_data + "\"current\":";
+      json_data = json_data + "\"" + String(avg_current1, 2) + "\",";
       json_data = json_data + "\"light\":";
-      json_data = json_data + "\"" + String(light1, 2) + "\",";
+      json_data = json_data + "\"" + String(avg_light1, 2) + "\",";
       json_data = json_data + "\"sound\":";
-      json_data = json_data + "\"" + String(sound1, 2) + "\",";
+      json_data = json_data + "\"" + String(avg_sound1, 2) + "\",";
       json_data = json_data + "\"flame\":";
-      json_data = json_data + "\"" + String(flame1, 2) + "\",";
+      json_data = json_data + "\"" + String(avg_flame1, 2) + "\",";
       json_data = json_data + "\"gas\":";
-      json_data = json_data + "\"" + String(gas1, 2) + "\",";
+      json_data = json_data + "\"" + String(avg_gas1, 2) + "\",";
+      json_data = json_data + "\"sound\":";
+      json_data = json_data + "\"" + String(avg_sound1, 2) + "\",";
+      json_data = json_data + "\"counter_main\":";
+      json_data = json_data + "\"" + String(counter_main) + "\",";
       json_data = json_data + "\"vibration\":";
-      json_data = json_data + "\"" + String(vibro1, 2) + "\"}}";
+      json_data = json_data + "\"" + String(avg_vibro1) + "\"}}";
 
       Serial.println("Data to be send:");
       Serial.println(json_data);
