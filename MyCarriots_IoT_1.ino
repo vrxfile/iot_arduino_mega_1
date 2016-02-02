@@ -16,12 +16,15 @@ const String APIKEY = "97f31f8321a8df31ed5efbb4f3e22072d5732d1b5d075f5d3ee85f741
 const String DEVICE = "defaultDevice@vrxfile.vrxfile";
 
 #define SERVER_UPDATE_TIME 60000  // Update Carriots data server every 60000 ms (1 minute)
-#define DHT_UPDATE_TIME 3000      // Update time for DHT sensors             
-#define BMP_UPDATE_TIME 1000      // Update time for pressure sensors             
-#define HMC_UPDATE_TIME 1000      // Update time for magnetic sensors             
-#define ACC_UPDATE_TIME 1000      // Update time for acceleration sensors             
-#define ANALOG_UPDATE_TIME 5      // Update time for analog sensors             
-#define VIBRO_UPDATE_TIME 5       // Update time for vibro sensors             
+#define DHT_UPDATE_TIME 3000      // Update time for DHT sensors
+#define BMP_UPDATE_TIME 1000      // Update time for pressure sensors
+#define HMC_UPDATE_TIME 1000      // Update time for magnetic sensors
+#define ACC_UPDATE_TIME 1000      // Update time for acceleration sensors
+#define ANALOG_UPDATE_TIME 5      // Update time for analog sensors
+#define VIBRO_UPDATE_TIME 5       // Update time for vibro sensors
+#define LCD_UPDATE_TIME 10000     // Update time for lcd display
+//#define HRST_UPDATE_TIME 3600000  // Update time for full reset
+#define HRST_UPDATE_TIME 180000  // Update time for full reset
 
 #define TIMEOUT 1000 // 1 second timout
 
@@ -53,6 +56,8 @@ unsigned long timer_bmp085 = 0;
 unsigned long timer_adxl345 = 0;
 unsigned long timer_analog = 0;
 unsigned long timer_vibro = 0;
+unsigned long timer_lcd = 0;
+unsigned long timer_hreset = 0;
 
 unsigned long counter_main = 0;
 unsigned long counter_carriots = 0;
@@ -62,6 +67,7 @@ unsigned long counter_bmp085 = 0;
 unsigned long counter_adxl345 = 0;
 unsigned long counter_analog = 0;
 unsigned long counter_vibro = 0;
+unsigned long counter_lcd = 0;
 
 #define MAX_WDT 1000 // Software watchdog 10 seconds
 unsigned long timer3_counter = 0;
@@ -149,6 +155,8 @@ float avg_light1 = 0;
 float avg_current1 = 0;
 float avg_voltage1 = 0;
 float avg_vibro1 = 0;
+
+LiquidCrystal_I2C lcd(0x27, 16, 2);
 
 // Main setup
 void setup()
@@ -265,6 +273,14 @@ void setup()
 
   // Reset software watchdog
   watchdog_reset();
+
+  // LCD via I2C
+  lcd.init();
+  lcd.backlight();
+  lcd.clear();
+
+  // Reset software watchdog
+  watchdog_reset();
 }
 
 // Main loop
@@ -275,12 +291,20 @@ void loop()
   {
     // Calculate average data for sensors
     calc_sensors();
+    // Reset software watchdog
+    watchdog_reset();
     // Print data from sensors
     printAllSenors();
+    // Reset software watchdog
+    watchdog_reset();
     // Send data to servser
     sendCarriotsStream();
+    // Reset software watchdog
+    watchdog_reset();
     // Reset variables and counters
     reset_cnt_var();
+    // Reset software watchdog
+    watchdog_reset();
     // Reset timeout timer
     timer_main = millis();
     counter_main ++;
@@ -350,6 +374,44 @@ void loop()
     readVIBRO();
     counter_vibro ++;
     timer_vibro = millis();
+  }
+
+  // LCD display timeout
+  if (millis() > timer_lcd + LCD_UPDATE_TIME)
+  {
+    if (counter_lcd == 0)
+    {
+      lcd.clear();
+      lcd.setCursor(0, 0);  lcd_printstr("T1 = " + String(t1) + " *C");
+      lcd.setCursor(0, 1);  lcd_printstr("T2 = " + String(t2) + " *C");
+    }
+    if (counter_lcd == 1)
+    {
+      lcd.clear();
+      lcd.setCursor(0, 0);  lcd_printstr("H1 = " + String(h1) + " %");
+      lcd.setCursor(0, 1);  lcd_printstr("P1 = " + String(p1) + " hPa");
+    }
+    if (counter_lcd == 2)
+    {
+      lcd.clear();
+      lcd.setCursor(0, 0);  lcd_printstr("U = " + String(voltage1) + " V");
+      lcd.setCursor(0, 1);  lcd_printstr("I = " + String(current1) + " A");
+    }
+    counter_lcd ++;
+    if (counter_lcd > 2)
+    {
+      counter_lcd = 0;
+    }
+    timer_lcd = millis();
+  }
+
+  // Hard reset of device timeout
+  if (millis() > timer_hreset + HRST_UPDATE_TIME)
+  {
+    Serial.println("Hard reset timeout!\n");
+    while (1)
+    {
+    }
   }
 
   // Reset software watchdog
@@ -731,5 +793,14 @@ void calc_sensors()
     avg_voltage1 = sum_voltage1 / counter_analog;
   }
   avg_vibro1 = vibro1;
+}
+
+// Print string on LCD via I2C
+void lcd_printstr(String str1)
+{
+  for (int i = 0; i < str1.length(); i++)
+  {
+    lcd.print(str1.charAt(i));
+  }
 }
 
