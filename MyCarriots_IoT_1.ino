@@ -23,7 +23,7 @@ const String DEVICE = "defaultDevice@vrxfile.vrxfile";
 #define ANALOG_UPDATE_TIME 5      // Update time for analog sensors
 #define VIBRO_UPDATE_TIME 5       // Update time for vibro sensors
 #define LCD_UPDATE_TIME 5000      // Update time for lcd display
-#define HRST_UPDATE_TIME 3600000  // Update time for full reset
+#define HRST_UPDATE_TIME 7200000  // Update time for full reset
 //#define HRST_UPDATE_TIME 180000  // Update time for full reset
 
 #define TIMEOUT 1000 // 1 second timout
@@ -229,7 +229,20 @@ void setup()
   Udp.begin(localPort);
   Serial.println("Waiting for sync NTP...");
   setSyncProvider(getNtpTime);
-  if (timeStatus() != timeNotSet) {
+  if (timeStatus() == timeNotSet)
+  {
+    Serial.println("Failed to sync from NTP!");
+    Serial.println("Waiting for sync RTC...");
+    setSyncProvider(RTC.get);
+  }
+  if (timeStatus() == timeNotSet)
+  {
+    Serial.println("Failed to sync from NTP!");
+  }
+  else
+  {
+    Serial.println("Syncing to RTC...");
+    RTC.set(now());
     Serial.print(hour());
     Serial.print(":");
     Serial.print(minute());
