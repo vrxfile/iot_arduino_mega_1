@@ -20,10 +20,11 @@ const String DEVICE = "defaultDevice@vrxfile.vrxfile";
 #define BMP_UPDATE_TIME 1000      // Update time for pressure sensors
 #define HMC_UPDATE_TIME 1000      // Update time for magnetic sensors
 #define ACC_UPDATE_TIME 1000      // Update time for acceleration sensors
+#define RTCTEMP_UPDATE_TIME 15000 // Update time for RTC temperature sensors
 #define ANALOG_UPDATE_TIME 5      // Update time for analog sensors
 #define VIBRO_UPDATE_TIME 5       // Update time for vibro sensors
 #define LCD_UPDATE_TIME 5000      // Update time for lcd display
-#define HRST_UPDATE_TIME 7200000  // Update time for full reset
+#define HRST_UPDATE_TIME 7200000  // Update time for full hard reset
 //#define HRST_UPDATE_TIME 180000  // Update time for full reset
 
 #define TIMEOUT 1000 // 1 second timout
@@ -54,6 +55,7 @@ unsigned long timer_dht11 = 0;
 unsigned long timer_hmc5883l = 0;
 unsigned long timer_bmp085 = 0;
 unsigned long timer_adxl345 = 0;
+unsigned long timer_ds3231 = 0;
 unsigned long timer_analog = 0;
 unsigned long timer_vibro = 0;
 unsigned long timer_lcd = 0;
@@ -65,6 +67,7 @@ unsigned long counter_dht11 = 0;
 unsigned long counter_hmc5883l = 0;
 unsigned long counter_bmp085 = 0;
 unsigned long counter_adxl345 = 0;
+unsigned long counter_ds3231 = 0;
 unsigned long counter_analog = 0;
 unsigned long counter_vibro = 0;
 unsigned long counter_lcd = 0;
@@ -96,7 +99,7 @@ Encoder myEnc(VibroSensorPIN, VibroSensorPIN);
 #define LEDPIN 13
 #define RESETPIN 48
 #define RSTETHPIN 49
-#define RELAYPIN 10
+#define RELAYPIN 9
 
 float h1 = 0;
 float t1 = 0;
@@ -104,6 +107,7 @@ float hic1 = 0;
 float p1 = 0;
 float t2 = 0;
 float alt1 = 0;
+float t3 = 0;
 float mx1 = 0;
 float my1 = 0;
 float mz1 = 0;
@@ -123,6 +127,7 @@ float sum_hic1 = 0;
 float sum_p1 = 0;
 float sum_t2 = 0;
 float sum_alt1 = 0;
+float sum_t3 = 0;
 float sum_mx1 = 0;
 float sum_my1 = 0;
 float sum_mz1 = 0;
@@ -142,6 +147,7 @@ float avg_hic1 = 0;
 float avg_p1 = 0;
 float avg_t2 = 0;
 float avg_alt1 = 0;
+float avg_t3 = 0;
 float avg_mx1 = 0;
 float avg_my1 = 0;
 float avg_mz1 = 0;
@@ -367,6 +373,15 @@ void loop()
     timer_adxl345 = millis();
   }
 
+  // RTC temperature sensors timeout
+  if (millis() > timer_ds3231 + RTCTEMP_UPDATE_TIME)
+  {
+    readRTCTEMP();
+    sum_t3 += t3;
+    counter_ds3231 ++;
+    timer_ds3231 = millis();
+  }
+
   // Analog sensors timeout
   if (millis() > timer_analog + ANALOG_UPDATE_TIME)
   {
@@ -401,22 +416,27 @@ void loop()
     if (counter_lcd == 1)
     {
       lcd.clear();
+      lcd.setCursor(0, 0);  lcd_printstr("T3 = " + String(t3) + " *C");
+    }
+    if (counter_lcd == 2)
+    {
+      lcd.clear();
       lcd.setCursor(0, 0);  lcd_printstr("H1 = " + String(h1) + " %");
       lcd.setCursor(0, 1);  lcd_printstr("P1 = " + String(p1) + " hPa");
     }
-    if (counter_lcd == 2)
+    if (counter_lcd == 3)
     {
       lcd.clear();
       lcd.setCursor(0, 0);  lcd_printstr("U = " + String(voltage1) + " V");
       lcd.setCursor(0, 1);  lcd_printstr("I = " + String(current1) + " A");
     }
-    if (counter_lcd == 3)
+    if (counter_lcd == 4)
     {
       lcd.clear();
       lcd.setCursor(0, 0);  lcd_printstr("CNT = " + String(counter_main));
     }
     counter_lcd ++;
-    if (counter_lcd > 3)
+    if (counter_lcd > 4)
     {
       counter_lcd = 0;
     }
@@ -454,6 +474,8 @@ void sendCarriotsStream()
       json_data = json_data + "\"" + String(avg_t1, 2) + "\",";
       json_data = json_data + "\"temperature2\":";
       json_data = json_data + "\"" + String(avg_t2, 2) + "\",";
+      json_data = json_data + "\"temperature3\":";
+      json_data = json_data + "\"" + String(avg_t3, 2) + "\",";
       json_data = json_data + "\"humidity\":";
       json_data = json_data + "\"" + String(avg_h1, 2) + "\",";
       json_data = json_data + "\"pressure\":";
@@ -572,6 +594,13 @@ void readACC()
   az1 = a_event.acceleration.z;
 }
 
+// Read RTC temperature sensors
+void readRTCTEMP()
+{
+  // DS3231
+  t3 = RTC.temperature() / 4.00;
+}
+
 // Read vibro sensors
 void readVIBRO()
 {
@@ -605,6 +634,9 @@ void printAllSenors()
   Serial.println(" *C");
   Serial.print("Temperature2: ");
   Serial.print(avg_t2);
+  Serial.println(" *C");
+  Serial.print("Temperature3: ");
+  Serial.print(avg_t3);
   Serial.println(" *C");
   Serial.print("Humidity1: ");
   Serial.print(avg_h1);
@@ -671,6 +703,9 @@ void printAllSenors()
   Serial.println(" counts");
   Serial.print("Acceleration counter : ");
   Serial.print(counter_adxl345);
+  Serial.println(" counts");
+  Serial.print("RTC temperature counter : ");
+  Serial.print(counter_ds3231);
   Serial.println(" counts");
   Serial.print("Analog counter : ");
   Serial.print(counter_analog);
@@ -764,6 +799,7 @@ void reset_cnt_var()
   counter_hmc5883l = 0;
   counter_bmp085 = 0;
   counter_adxl345 = 0;
+  counter_ds3231 = 0;
   counter_analog = 0;
   counter_vibro = 0;
   // Reset sums
@@ -773,6 +809,7 @@ void reset_cnt_var()
   sum_p1 = 0;
   sum_t2 = 0;
   sum_alt1 = 0;
+  sum_t3 = 0;
   sum_mx1 = 0;
   sum_my1 = 0;
   sum_mz1 = 0;
@@ -814,6 +851,10 @@ void calc_sensors()
     avg_ax1 = sum_ax1 / counter_adxl345;
     avg_ay1 = sum_ay1 / counter_adxl345;
     avg_az1 = sum_az1 / counter_adxl345;
+  }
+  if (counter_ds3231 != 0)
+  {
+    avg_t3 = sum_t3 / counter_ds3231;
   }
   if (counter_analog != 0)
   {
