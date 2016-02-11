@@ -24,7 +24,7 @@ const String DEVICE = "defaultDevice@vrxfile.vrxfile";
 #define RTCTEMP_UPDATE_TIME 15000 // Update time for RTC temperature sensors
 #define ANALOG_UPDATE_TIME 5      // Update time for analog sensors
 #define VIBRO_UPDATE_TIME 5       // Update time for vibro sensors
-#define LCD_UPDATE_TIME 5000      // Update time for lcd display
+#define LCD_UPDATE_TIME 60000      // Update time for lcd display
 #define HRST_UPDATE_TIME 7200000  // Update time for full hard reset
 //#define HRST_UPDATE_TIME 180000  // Update time for full reset
 
@@ -307,6 +307,10 @@ void setup()
   // Setup the TFT module
   myGLCD.InitLCD();
   myGLCD.setFont(BigFont);
+  myGLCD.clrScr();
+  myGLCD.setBackColor(0, 0, 0);
+  myGLCD.setColor(255, 255, 255);
+  myGLCD.print("Waiting about 1 minute for first measure...", LEFT, 480, 180);
 
   // Reset software watchdog
   watchdog_reset();
@@ -433,7 +437,7 @@ void loop()
     {
       lcd.clear();
       lcd.setCursor(0, 0);  lcd_printstr("H1 = " + String(h1) + " %");
-      lcd.setCursor(0, 1);  lcd_printstr("P1 = " + String(p1) + " hPa");
+      lcd.setCursor(0, 1);  lcd_printstr("P1 = " + String(p1) + " mm Hg");
     }
     if (counter_lcd == 3)
     {
@@ -458,16 +462,48 @@ void loop()
   {
     if (counter_lcd == 0)
     {
-      myGLCD.setColor(0, 0, 127);
+      watchdog_reset();
+      myGLCD.setColor(0, 0, 0);
       myGLCD.fillRect(0, 0, 799, 479);
-      myGLCD.setBackColor(0, 0, 127);
+      myGLCD.setBackColor(0, 0, 0);
+      watchdog_reset();
       myGLCD.setColor(255, 255, 255);
-      myGLCD.print("T1 = " + String(t1) + " *C", LEFT, 480, 180);
-      myGLCD.print("T2 = " + String(t2) + " *C", LEFT, 460, 180);
-      myGLCD.print("T3 = " + String(t3) + " *C", LEFT, 440, 180);
-      myGLCD.print("H1 = " + String(h1) + " %", LEFT, 420, 180);
-      myGLCD.print("P1 = " + String(p1) + " hPa", LEFT, 400, 180);
-
+      myGLCD.print(String(hour()) + ":" + String(minute()) + ":" + String(second()) + " "
+                   + String(day()) + "-" + String(month()) + "-" + String(year()), LEFT, 480, 180);
+      watchdog_reset();
+      myGLCD.setColor(255, 255, 0);
+      myGLCD.print("T1 = " + String(t1) + " *C", LEFT, 440, 180);
+      myGLCD.print("T2 = " + String(t2) + " *C", LEFT, 420, 180);
+      myGLCD.print("T3 = " + String(t3) + " *C", LEFT, 400, 180);
+      myGLCD.print("H1 = " + String(h1) + " %", LEFT, 380, 180);
+      myGLCD.print("P1 = " + String(p1) + " mm Hg", LEFT, 360, 180);
+      watchdog_reset();
+      myGLCD.setColor(0, 255, 255);
+      myGLCD.print("MX = " + String(mx1) + " uT", LEFT, 320, 180);
+      myGLCD.print("MY = " + String(my1) + " uT", LEFT, 300, 180);
+      myGLCD.print("MZ = " + String(mz1) + " uT", LEFT, 280, 180);
+      myGLCD.print("AX = " + String(ax1) + " m/s^2", LEFT, 260, 180);
+      myGLCD.print("AY = " + String(ay1) + " m/s^2", LEFT, 240, 180);
+      myGLCD.print("AZ = " + String(az1) + " m/s^2", LEFT, 220, 180);
+      watchdog_reset();
+      myGLCD.setColor(255, 0, 255);
+      myGLCD.print("LIGHT = " + String(light1) + " units", LEFT, 180, 180);
+      myGLCD.print("FLAME = " + String(flame1) + " units", LEFT, 160, 180);
+      myGLCD.print("GAS   = " + String(gas1) + " units", LEFT, 140, 180);
+      myGLCD.print("SOUND = " + String(sound1) + " units", LEFT, 120, 180);
+      myGLCD.print("VIBRO = " + String(vibro1) + " units", LEFT, 100, 180);
+      watchdog_reset();
+      myGLCD.setColor(0, 255, 0);
+      myGLCD.print("Network parameters:", 400, 480, 180);
+      myGLCD.print("IP   = " + String(IPAddress(Ethernet.localIP())), 400, 460, 180);
+      myGLCD.print("MASK = " + String(IPAddress(Ethernet.subnetMask())), 400, 440, 180);
+      myGLCD.print("GATE = " + String(IPAddress(Ethernet.gatewayIP())), 400, 420, 180);
+      myGLCD.print("DNS  = " + String(IPAddress(Ethernet.dnsServerIP())), 400, 400, 180);
+      watchdog_reset();
+      myGLCD.setColor(255, 63, 63);
+      myGLCD.print("VOLTAGE = " + String(voltage1) + " V", 400, 360, 180);
+      myGLCD.print("CURRENT = " + String(current1) + " A", 400, 340, 180);
+      watchdog_reset();
     }
     counter_lcd ++;
     if (counter_lcd > 0)
@@ -476,7 +512,6 @@ void loop()
     }
     timer_lcd = millis();
   }
-
 
   // Hard reset of device timeout
   if (millis() > timer_hreset + HRST_UPDATE_TIME)
@@ -533,8 +568,6 @@ void sendCarriotsStream()
       json_data = json_data + "\"" + String(avg_current1, 2) + "\",";
       json_data = json_data + "\"light\":";
       json_data = json_data + "\"" + String(avg_light1, 2) + "\",";
-      json_data = json_data + "\"sound\":";
-      json_data = json_data + "\"" + String(avg_sound1, 2) + "\",";
       json_data = json_data + "\"flame\":";
       json_data = json_data + "\"" + String(avg_flame1, 2) + "\",";
       json_data = json_data + "\"gas\":";
@@ -611,7 +644,7 @@ void readBMP()
   sensors_event_t p_event;
   bmp.getEvent(&p_event);
   if (p_event.pressure) {
-    p1 = p_event.pressure;
+    p1 = p_event.pressure * 7.5006 / 10;
     bmp.getTemperature(&t2);
     float seaLevelPressure = SENSORS_PRESSURE_SEALEVELHPA;
     alt1 = bmp.pressureToAltitude(seaLevelPressure, p_event.pressure);
@@ -681,7 +714,7 @@ void printAllSenors()
   Serial.println(" *C");
   Serial.print("Pressure1: ");
   Serial.print(avg_p1);
-  Serial.println(" hPa");
+  Serial.println(" mm Hg");
   Serial.print("Altitude1: ");
   Serial.print(avg_alt1);
   Serial.println(" m");
