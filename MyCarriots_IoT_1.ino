@@ -1,16 +1,17 @@
 #include <SPI.h>
 #include "DHT.h"
 #include <Wire.h>
+#include <UTFT.h>
 #include <Encoder.h>
 #include <TimeLib.h>
 #include <DS3232RTC.h>
-#include <LiquidCrystal_I2C.h>
 #include <UIPEthernet.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BMP085_U.h>
 #include <Adafruit_HMC5883_U.h>
 #include <Adafruit_ADXL345_U.h>
-#include <EEPROM24LC256_512.h>
+//#include <EEPROM24LC256_512.h>
+//#include <LiquidCrystal_I2C.h>
 
 const String APIKEY = "97f31f8321a8df31ed5efbb4f3e22072d5732d1b5d075f5d3ee85f74115d1716";
 const String DEVICE = "defaultDevice@vrxfile.vrxfile";
@@ -162,7 +163,10 @@ float avg_current1 = 0;
 float avg_voltage1 = 0;
 float avg_vibro1 = 0;
 
-LiquidCrystal_I2C lcd(0x27, 16, 2);
+//LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+extern uint8_t BigFont[];
+UTFT myGLCD(ITDB50, 38, 39, 40, 41);
 
 // Main setup
 void setup()
@@ -294,9 +298,15 @@ void setup()
   watchdog_reset();
 
   // LCD via I2C
-  lcd.init();
-  lcd.backlight();
-  lcd.clear();
+  /*
+    lcd.init();
+    lcd.backlight();
+    lcd.clear();
+  */
+
+  // Setup the TFT module
+  myGLCD.InitLCD();
+  myGLCD.setFont(BigFont);
 
   // Reset software watchdog
   watchdog_reset();
@@ -405,8 +415,9 @@ void loop()
   }
 
   // LCD display timeout
-  if (millis() > timer_lcd + LCD_UPDATE_TIME)
-  {
+  /*
+    if (millis() > timer_lcd + LCD_UPDATE_TIME)
+    {
     if (counter_lcd == 0)
     {
       lcd.clear();
@@ -441,7 +452,31 @@ void loop()
       counter_lcd = 0;
     }
     timer_lcd = millis();
+    }
+  */
+  if (millis() > timer_lcd + LCD_UPDATE_TIME)
+  {
+    if (counter_lcd == 0)
+    {
+      myGLCD.setColor(0, 0, 127);
+      myGLCD.fillRect(0, 0, 799, 479);
+      myGLCD.setBackColor(0, 0, 127);
+      myGLCD.setColor(255, 255, 255);
+      myGLCD.print("T1 = " + String(t1) + " *C", LEFT, 480, 180);
+      myGLCD.print("T2 = " + String(t2) + " *C", LEFT, 460, 180);
+      myGLCD.print("T3 = " + String(t3) + " *C", LEFT, 440, 180);
+      myGLCD.print("H1 = " + String(h1) + " %", LEFT, 420, 180);
+      myGLCD.print("P1 = " + String(p1) + " hPa", LEFT, 400, 180);
+
+    }
+    counter_lcd ++;
+    if (counter_lcd > 0)
+    {
+      counter_lcd = 0;
+    }
+    timer_lcd = millis();
   }
+
 
   // Hard reset of device timeout
   if (millis() > timer_hreset + HRST_UPDATE_TIME)
@@ -868,12 +903,14 @@ void calc_sensors()
   avg_vibro1 = vibro1;
 }
 
-// Print string on LCD via I2C
-void lcd_printstr(String str1)
-{
+/*
+  // Print string on LCD via I2C
+  void lcd_printstr(String str1)
+  {
   for (int i = 0; i < str1.length(); i++)
   {
     lcd.print(str1.charAt(i));
   }
-}
+  }
+*/
 
