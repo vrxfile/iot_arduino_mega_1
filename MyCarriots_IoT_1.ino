@@ -2,6 +2,7 @@
 #include "DHT.h"
 #include <Wire.h>
 #include <UTFT.h>
+#include <UTouch.h>
 #include <Encoder.h>
 #include <TimeLib.h>
 #include <DS3232RTC.h>
@@ -10,7 +11,7 @@
 #include <Adafruit_BMP085_U.h>
 #include <Adafruit_HMC5883_U.h>
 #include <Adafruit_ADXL345_U.h>
-//#include <EEPROM24LC256_512.h>
+#include <EEPROM24LC256_512.h>
 //#include <LiquidCrystal_I2C.h>
 
 const String APIKEY = "97f31f8321a8df31ed5efbb4f3e22072d5732d1b5d075f5d3ee85f74115d1716";
@@ -179,7 +180,7 @@ void setup()
   digitalWrite(LEDPIN, HIGH);
 
   // Serial port
-  Serial.begin(19200);
+  Serial.begin(9600);
   Serial.println("/* Carriots data client by Rostislav Varzar */\n");
 
   // Timer 3 interrupt (for custom WatchDog)
@@ -494,11 +495,15 @@ void loop()
       myGLCD.print("VIBRO = " + String(vibro1) + " units", LEFT, 100, 180);
       watchdog_reset();
       myGLCD.setColor(0, 255, 0);
+      unsigned long ip1 = Ethernet.localIP();
+      unsigned long mask1 = Ethernet.subnetMask();
+      unsigned long gate1 = Ethernet.gatewayIP();
+      unsigned long dns1 = Ethernet.dnsServerIP();
       myGLCD.print("Network parameters:", 400, 480, 180);
-      myGLCD.print("IP   = " + String(IPAddress(Ethernet.localIP())), 400, 460, 180);
-      myGLCD.print("MASK = " + String(IPAddress(Ethernet.subnetMask())), 400, 440, 180);
-      myGLCD.print("GATE = " + String(IPAddress(Ethernet.gatewayIP())), 400, 420, 180);
-      myGLCD.print("DNS  = " + String(IPAddress(Ethernet.dnsServerIP())), 400, 400, 180);
+      myGLCD.print("IP   = " + String(ip1 & 0xFF) + "." + String((ip1 >> 8) & 0xFF) + "." + String((ip1 >> 16) & 0xFF) + "." + String((ip1 >> 24) & 0xFF), 400, 460, 180);
+      myGLCD.print("MASK = " + String((mask1) & 0xFF) + "." + String((mask1 >> 8) & 0xFF) + "." + String((mask1 >> 16) & 0xFF) + "." + String((mask1 >> 24) & 0xFF), 400, 440, 180);
+      myGLCD.print("GATE = " + String((gate1) & 0xFF) + "." + String((gate1 >> 8) & 0xFF) + "." + String((gate1 >> 16) & 0xFF) + "." + String((gate1 >> 24) & 0xFF), 400, 420, 180);
+      myGLCD.print("DNS  = " + String((dns1) & 0xFF) + "." + String((dns1 >> 8) & 0xFF) + "." + String((dns1 >> 16) & 0xFF) + "." + String((dns1 >> 24) & 0xFF), 400, 400, 180);
       watchdog_reset();
       myGLCD.setColor(255, 63, 63);
       myGLCD.print("VOLTAGE = " + String(voltage1) + " V", 400, 360, 180);
@@ -690,7 +695,7 @@ void readANALOG()
   flame1 = (1023.00 - sens2) / 1023.00 * 100.00;
   sound1 = sens3 / 1023.00 * 100.00;
   light1 = (1023.00 - sens4) / 1023.00 * 100.00;
-  current1 = (sens5 / 1023.00 * 5.00 - 2.50) / 0.185;
+  current1 = (sens5 / 1023.00 * 5.00 - 2.50) / 0.185 + 0.42;
   voltage1 = sens6 / 1023.00 * 25.00;
 }
 
