@@ -170,6 +170,9 @@ float avg_vibro1 = 0;
 extern uint8_t BigFont[];
 UTFT myGLCD(ITDB50, 38, 39, 40, 41);
 
+EEPROM256_512 mem_1;
+unsigned long counter_eeprom = 0;
+
 // Main setup
 void setup()
 {
@@ -313,6 +316,16 @@ void setup()
   myGLCD.setBackColor(0, 0, 0);
   myGLCD.setColor(255, 255, 255);
   myGLCD.print("Waiting about 1 minute for first measure...", LEFT, 480, 180);
+
+  // Reset software watchdog
+  watchdog_reset();
+
+  // EEPROM 24LC256
+  mem_1.begin(0, 0);
+  counter_eeprom = mem_1.readByte(0);
+  counter_eeprom += mem_1.readByte(1) << 8;
+  counter_eeprom += mem_1.readByte(1) << 16;
+  counter_eeprom += mem_1.readByte(1) << 24;
 
   // Reset software watchdog
   watchdog_reset();
@@ -765,6 +778,9 @@ void printAllSenors()
   Serial.println(" counts");
   Serial.print("Main counter : ");
   Serial.print(counter_main);
+  Serial.println(" counts");
+  Serial.print("EEPROM counter : ");
+  Serial.print(counter_eeprom);
   Serial.println(" counts");
   Serial.print("DHT counter : ");
   Serial.print(counter_dht11);
