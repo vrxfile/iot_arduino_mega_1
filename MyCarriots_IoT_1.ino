@@ -94,14 +94,15 @@ Adafruit_ADXL345_Unified accel = Adafruit_ADXL345_Unified(10345);
 #define LightSensorPIN A3
 #define CurrentSensorPIN A4
 #define VoltageSensorPIN A5
-#define VibroSensorPIN 11
+#define VibroSensorPIN 9
 
 Encoder myEnc(VibroSensorPIN, VibroSensorPIN);
 
 #define LEDPIN 13
 #define RESETPIN 48
 #define RSTETHPIN 49
-#define RELAYPIN 9
+#define RELAYPIN 19
+#define SOUNDPIN 11
 
 float h1 = 0;
 float t1 = 0;
@@ -505,7 +506,7 @@ void loop()
       myGLCD.print("GATE = " + String((gate1) & 0xFF) + "." + String((gate1 >> 8) & 0xFF) + "." + String((gate1 >> 16) & 0xFF) + "." + String((gate1 >> 24) & 0xFF), 400, 420, 180);
       myGLCD.print("DNS  = " + String((dns1) & 0xFF) + "." + String((dns1 >> 8) & 0xFF) + "." + String((dns1 >> 16) & 0xFF) + "." + String((dns1 >> 24) & 0xFF), 400, 400, 180);
       watchdog_reset();
-      myGLCD.setColor(255, 63, 63);
+      myGLCD.setColor(255, 127, 127);
       myGLCD.print("VOLTAGE = " + String(voltage1) + " V", 400, 360, 180);
       myGLCD.print("CURRENT = " + String(current1) + " A", 400, 340, 180);
       watchdog_reset();
