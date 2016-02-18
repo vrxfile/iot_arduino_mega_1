@@ -575,6 +575,8 @@ void sendCarriotsStream()
       json_data = json_data + "\",\"at\":\"now\",\"data\":{";
       json_data = json_data + "\"counter_main\":";
       json_data = json_data + "\"" + String(counter_main) + "\",";
+      json_data = json_data + "\"counter_power\":";
+      json_data = json_data + "\"" + String(counter_power) + "\",";
       json_data = json_data + "\"temperature1\":";
       json_data = json_data + "\"" + String(avg_t1, 2) + "\",";
       json_data = json_data + "\"temperature2\":";
