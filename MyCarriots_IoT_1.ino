@@ -73,6 +73,7 @@ unsigned long counter_ds3231 = 0;
 unsigned long counter_analog = 0;
 unsigned long counter_vibro = 0;
 unsigned long counter_lcd = 0;
+unsigned long counter_power = 0;
 
 #define MAX_WDT 1000 // Software watchdog 10 seconds
 unsigned long timer3_counter = 0;
@@ -171,7 +172,6 @@ extern uint8_t BigFont[];
 UTFT myGLCD(ITDB50, 38, 39, 40, 41);
 
 EEPROM256_512 mem_1;
-unsigned long counter_eeprom = 0;
 
 // Main setup
 void setup()
@@ -320,12 +320,20 @@ void setup()
   // Reset software watchdog
   watchdog_reset();
 
-  // EEPROM 24LC256
+  // EEPROM 24LC256 and main power counter
   mem_1.begin(0, 0);
-  counter_eeprom = mem_1.readByte(0);
-  counter_eeprom += mem_1.readByte(1) << 8;
-  counter_eeprom += mem_1.readByte(1) << 16;
-  counter_eeprom += mem_1.readByte(1) << 24;
+  counter_power = mem_1.readByte(0);
+  counter_power += mem_1.readByte(1) << 8;
+  counter_power += mem_1.readByte(2) << 16;
+  counter_power += mem_1.readByte(3) << 24;
+  counter_power += 1;
+  mem_1.writeByte(0, (counter_power) & 0xFF);
+  mem_1.writeByte(1, (counter_power >> 8) & 0xFF);
+  mem_1.writeByte(2, (counter_power >> 16) & 0xFF);
+  mem_1.writeByte(3, (counter_power >> 24) & 0xFF);
+  Serial.println();
+  Serial.println("Main power counter: " + String(counter_power));
+  myGLCD.print("Main power counter: " + String(counter_power), LEFT, 460, 180);
 
   // Reset software watchdog
   watchdog_reset();
@@ -519,7 +527,7 @@ void loop()
       myGLCD.print("GATE = " + String((gate1) & 0xFF) + "." + String((gate1 >> 8) & 0xFF) + "." + String((gate1 >> 16) & 0xFF) + "." + String((gate1 >> 24) & 0xFF), 400, 420, 180);
       myGLCD.print("DNS  = " + String((dns1) & 0xFF) + "." + String((dns1 >> 8) & 0xFF) + "." + String((dns1 >> 16) & 0xFF) + "." + String((dns1 >> 24) & 0xFF), 400, 400, 180);
       watchdog_reset();
-      myGLCD.setColor(255, 127, 127);
+      myGLCD.setColor(255, 127, 0);
       myGLCD.print("VOLTAGE = " + String(voltage1) + " V", 400, 360, 180);
       myGLCD.print("CURRENT = " + String(current1) + " A", 400, 340, 180);
       watchdog_reset();
@@ -779,8 +787,8 @@ void printAllSenors()
   Serial.print("Main counter : ");
   Serial.print(counter_main);
   Serial.println(" counts");
-  Serial.print("EEPROM counter : ");
-  Serial.print(counter_eeprom);
+  Serial.print("Power counter : ");
+  Serial.print(counter_power);
   Serial.println(" counts");
   Serial.print("DHT counter : ");
   Serial.print(counter_dht11);
