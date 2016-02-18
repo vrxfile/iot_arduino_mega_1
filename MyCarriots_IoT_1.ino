@@ -326,6 +326,10 @@ void setup()
   counter_power += mem_1.readByte(1) << 8;
   counter_power += mem_1.readByte(2) << 16;
   counter_power += mem_1.readByte(3) << 24;
+
+  // Reset software watchdog
+  watchdog_reset();
+
   counter_power += 1;
   mem_1.writeByte(0, (counter_power) & 0xFF);
   mem_1.writeByte(1, (counter_power >> 8) & 0xFF);
@@ -527,9 +531,13 @@ void loop()
       myGLCD.print("GATE = " + String((gate1) & 0xFF) + "." + String((gate1 >> 8) & 0xFF) + "." + String((gate1 >> 16) & 0xFF) + "." + String((gate1 >> 24) & 0xFF), 400, 420, 180);
       myGLCD.print("DNS  = " + String((dns1) & 0xFF) + "." + String((dns1 >> 8) & 0xFF) + "." + String((dns1 >> 16) & 0xFF) + "." + String((dns1 >> 24) & 0xFF), 400, 400, 180);
       watchdog_reset();
-      myGLCD.setColor(255, 127, 0);
+      myGLCD.setColor(255, 191, 0);
       myGLCD.print("VOLTAGE = " + String(voltage1) + " V", 400, 360, 180);
       myGLCD.print("CURRENT = " + String(current1) + " A", 400, 340, 180);
+      watchdog_reset();
+      myGLCD.setColor(15, 15, 255);
+      myGLCD.print("POWER COUNTER = " + String(counter_power), 400, 300, 180);
+      myGLCD.print("MAIN COUNTER  = " + String(counter_main), 400, 280, 180);
       watchdog_reset();
     }
     counter_lcd ++;
