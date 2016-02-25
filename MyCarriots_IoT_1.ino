@@ -13,9 +13,15 @@
 #include <Adafruit_ADXL345_U.h>
 #include <EEPROM24LC256_512.h>
 //#include <LiquidCrystal_I2C.h>
+#include "ThingSpeak.h"
 
+// For Carriots IoT
 const String APIKEY = "97f31f8321a8df31ed5efbb4f3e22072d5732d1b5d075f5d3ee85f74115d1716";
 const String DEVICE = "defaultDevice@vrxfile.vrxfile";
+
+// For ThingSpeak IoT
+unsigned long myChannelNumber = 91064;
+const char * myWriteAPIKey = "304X8R9CCPKDDHQH";
 
 #define SERVER_UPDATE_TIME 60000  // Update Carriots data server every 60000 ms (1 minute)
 #define DHT_UPDATE_TIME 3000      // Update time for DHT sensors
@@ -75,7 +81,7 @@ unsigned long counter_vibro = 0;
 unsigned long counter_lcd = 0;
 unsigned long counter_power = 0;
 
-#define MAX_WDT 1000 // Software watchdog 10 seconds
+#define MAX_WDT 2000 // Software watchdog 20 seconds
 unsigned long timer3_counter = 0;
 unsigned long wdt_timer = 0;
 
@@ -185,7 +191,7 @@ void setup()
 
   // Serial port
   Serial.begin(9600);
-  Serial.println("/* Carriots data client by Rostislav Varzar */\n");
+  Serial.println("/* IoT (Carriots and ThingSpeak) data client by Rostislav Varzar */\n");
 
   // Timer 3 interrupt (for custom WatchDog)
   noInterrupts();           // disable all interrupts
@@ -341,6 +347,9 @@ void setup()
 
   // Reset software watchdog
   watchdog_reset();
+
+  // ThingSpeak init
+  ThingSpeak.begin(client);
 }
 
 // Main loop
@@ -357,8 +366,12 @@ void loop()
     printAllSenors();
     // Reset software watchdog
     watchdog_reset();
-    // Send data to servser
+    // Send data to Carriots server
     sendCarriotsStream();
+    // Reset software watchdog
+    watchdog_reset();
+    // Send data to ThingSpeak serser
+    //sendThingSpeakStream();
     // Reset software watchdog
     watchdog_reset();
     // Reset variables and counters
@@ -561,7 +574,7 @@ void loop()
   watchdog_reset();
 }
 
-// Send IoT packet
+// Send IoT packet to Carriots
 void sendCarriotsStream()
 {
   if (client.connect(carriots_server, 80))
@@ -646,6 +659,25 @@ void sendCarriotsStream()
       client.stop();
     }
   }
+}
+
+// Send IoT packet to ThingSpeak
+void sendThingSpeakStream()
+{
+  Serial.print("Sending data to ThingSpeak server... ");
+  ThingSpeak.setField(1, avg_t1);
+  Serial.print("1");
+  ThingSpeak.setField(2, avg_t2);
+  Serial.print("2");
+  ThingSpeak.setField(3, avg_t3);
+  Serial.print("3");
+  ThingSpeak.setField(4, avg_h1);
+  Serial.print("4");
+  ThingSpeak.setField(5, avg_p1);
+  Serial.print("5");
+  ThingSpeak.writeFields(myChannelNumber, myWriteAPIKey);
+  Serial.println("Sent!");
+  Serial.println("");
 }
 
 // Read DHT sensors
