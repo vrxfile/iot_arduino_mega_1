@@ -13,15 +13,14 @@
 #include <Adafruit_ADXL345_U.h>
 #include <EEPROM24LC256_512.h>
 //#include <LiquidCrystal_I2C.h>
-#include "ThingSpeak.h"
 
 // For Carriots IoT
 const String APIKEY = "97f31f8321a8df31ed5efbb4f3e22072d5732d1b5d075f5d3ee85f74115d1716";
 const String DEVICE = "defaultDevice@vrxfile.vrxfile";
 
 // For ThingSpeak IoT
-unsigned long myChannelNumber = 91064;
-const char * myWriteAPIKey = "304X8R9CCPKDDHQH";
+const String CHANNELID = "91064";
+const String WRITEAPIKEY = "304X8R9CCPKDDHQH";
 
 #define SERVER_UPDATE_TIME 60000  // Update Carriots data server every 60000 ms (1 minute)
 #define DHT_UPDATE_TIME 3000      // Update time for DHT sensors
@@ -45,6 +44,7 @@ IPAddress gateway(192, 168, 1, 1);
 IPAddress subnet(255, 255, 255, 0);
 
 IPAddress carriots_server(82, 223, 244, 60);
+IPAddress thingspeak_server(184, 106, 153, 149);
 
 IPAddress timeServer(132, 163, 4, 101); // time-a.timefreq.bldrdoc.gov
 // IPAddress timeServer(132, 163, 4, 102); // time-b.timefreq.bldrdoc.gov
@@ -59,6 +59,7 @@ EthernetClient client;
 
 unsigned long timer_main = 0;
 unsigned long timer_carriots = 0;
+unsigned long timer_thingspeak = 0;
 unsigned long timer_dht11 = 0;
 unsigned long timer_hmc5883l = 0;
 unsigned long timer_bmp085 = 0;
@@ -336,6 +337,7 @@ void setup()
   // Reset software watchdog
   watchdog_reset();
 
+  // Read and write main power counters
   counter_power += 1;
   mem_1.writeByte(0, (counter_power) & 0xFF);
   mem_1.writeByte(1, (counter_power >> 8) & 0xFF);
@@ -347,9 +349,6 @@ void setup()
 
   // Reset software watchdog
   watchdog_reset();
-
-  // ThingSpeak init
-  ThingSpeak.begin(client);
 }
 
 // Main loop
@@ -371,7 +370,7 @@ void loop()
     // Reset software watchdog
     watchdog_reset();
     // Send data to ThingSpeak serser
-    //sendThingSpeakStream();
+    sendThingSpeakStream();
     // Reset software watchdog
     watchdog_reset();
     // Reset variables and counters
@@ -664,20 +663,57 @@ void sendCarriotsStream()
 // Send IoT packet to ThingSpeak
 void sendThingSpeakStream()
 {
-  Serial.print("Sending data to ThingSpeak server... ");
-  ThingSpeak.setField(1, avg_t1);
-  Serial.print("1");
-  ThingSpeak.setField(2, avg_t2);
-  Serial.print("2");
-  ThingSpeak.setField(3, avg_t3);
-  Serial.print("3");
-  ThingSpeak.setField(4, avg_h1);
-  Serial.print("4");
-  ThingSpeak.setField(5, avg_p1);
-  Serial.print("5");
-  ThingSpeak.writeFields(myChannelNumber, myWriteAPIKey);
-  Serial.println("Sent!");
-  Serial.println("");
+  if (client.connect(thingspeak_server, 80))
+  {
+    if (client.connected())
+    {
+      Serial.println("Sending data to ThingSpeak server...\n");
+
+      //String post_data = "/update?";
+      //post_data = post_data + "api_key=";
+      //post_data = post_data + WRITEAPIKEY;
+      String post_data = "field1=";
+      post_data = post_data + String(avg_t1, 2);
+      post_data = post_data + "&field2=";
+      post_data = post_data + String(avg_t2, 2);
+      post_data = post_data + "&field3=";
+      post_data = post_data + String(avg_t3, 2);
+      post_data = post_data + "&field4=";
+      post_data = post_data + String(avg_h1, 2);
+      post_data = post_data + "&field5=";
+      post_data = post_data + String(avg_p1, 2);
+
+      Serial.println("Data to be send:");
+      Serial.println(post_data);
+
+      client.println("POST /update HTTP/1.1");
+      client.println("Host: api.thingspeak.com");
+      client.println("Connection: close");
+      client.println("X-THINGSPEAKAPIKEY: " + WRITEAPIKEY);
+      client.println("Content-Type: application/x-www-form-urlencoded");
+      client.print("Content-Length: ");
+      int thisLength = post_data.length();
+      client.println(thisLength);
+      client.println();
+      client.println(post_data);
+
+      client.println();
+
+      delay(1000);
+
+      timer_thingspeak = millis();
+      while ((client.available() == 0) && (millis() < timer_thingspeak + TIMEOUT));
+
+      while (client.available() > 0)
+      {
+        char inData = client.read();
+        Serial.print(inData);
+      }
+      Serial.println("\n");
+
+      client.stop();
+    }
+  }
 }
 
 // Read DHT sensors
