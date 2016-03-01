@@ -19,8 +19,10 @@ const String APIKEY = "97f31f8321a8df31ed5efbb4f3e22072d5732d1b5d075f5d3ee85f741
 const String DEVICE = "defaultDevice@vrxfile.vrxfile";
 
 // For ThingSpeak IoT
-const String CHANNELID = "91064";
-const String WRITEAPIKEY = "304X8R9CCPKDDHQH";
+const String CHANNELID_1 = "91064";
+const String CHANNELID_2 = "92102";
+const String WRITEAPIKEY_1 = "304X8R9CCPKDDHQH";
+const String WRITEAPIKEY_2 = "45QUXLFHW5RDS7DO";
 
 #define SERVER_UPDATE_TIME 60000  // Update Carriots data server every 60000 ms (1 minute)
 #define DHT_UPDATE_TIME 3000      // Update time for DHT sensors
@@ -388,8 +390,10 @@ void loop()
     sendCarriotsStream();
     // Reset software watchdog
     watchdog_reset();
-    // Send data to ThingSpeak serser
-    sendThingSpeakStream();
+    // Send weather data to ThingSpeak serser
+    sendThingSpeakStream_1();
+    // Send seismo and magnetic data to ThingSpeak serser
+    sendThingSpeakStream_2();
     // Reset software watchdog
     watchdog_reset();
     // Reset variables and counters
@@ -679,18 +683,18 @@ void sendCarriotsStream()
   }
 }
 
-// Send IoT packet to ThingSpeak
-void sendThingSpeakStream()
+// Send IoT packet to ThingSpeak (1)
+void sendThingSpeakStream_1()
 {
   if (client.connect(thingspeak_server, 80))
   {
     if (client.connected())
     {
-      Serial.println("Sending data to ThingSpeak server...\n");
+      Serial.println("Sending data to ThingSpeak server (1)...\n");
 
       //String post_data = "/update?";
       //post_data = post_data + "api_key=";
-      //post_data = post_data + WRITEAPIKEY;
+      //post_data = post_data + WRITEAPIKEY_1;
       String post_data = "field1=";
       post_data = post_data + String(avg_t1, 2);
       post_data = post_data + "&field2=";
@@ -701,6 +705,8 @@ void sendThingSpeakStream()
       post_data = post_data + String(avg_h1, 2);
       post_data = post_data + "&field5=";
       post_data = post_data + String(avg_p1, 2);
+      post_data = post_data + "&field6=";
+      post_data = post_data + String(avg_light1, 2);
 
       Serial.println("Data to be send:");
       Serial.println(post_data);
@@ -708,7 +714,67 @@ void sendThingSpeakStream()
       client.println("POST /update HTTP/1.1");
       client.println("Host: api.thingspeak.com");
       client.println("Connection: close");
-      client.println("X-THINGSPEAKAPIKEY: " + WRITEAPIKEY);
+      client.println("X-THINGSPEAKAPIKEY: " + WRITEAPIKEY_1);
+      client.println("Content-Type: application/x-www-form-urlencoded");
+      client.print("Content-Length: ");
+      int thisLength = post_data.length();
+      client.println(thisLength);
+      client.println();
+      client.println(post_data);
+
+      client.println();
+
+      delay(1000);
+
+      timer_thingspeak = millis();
+      while ((client.available() == 0) && (millis() < timer_thingspeak + TIMEOUT));
+
+      while (client.available() > 0)
+      {
+        char inData = client.read();
+        Serial.print(inData);
+      }
+      Serial.println("\n");
+
+      client.stop();
+    }
+  }
+}
+
+// Send IoT packet to ThingSpeak (2)
+void sendThingSpeakStream_2()
+{
+  if (client.connect(thingspeak_server, 80))
+  {
+    if (client.connected())
+    {
+      Serial.println("Sending data to ThingSpeak server (2)...\n");
+
+      //String post_data = "/update?";
+      //post_data = post_data + "api_key=";
+      //post_data = post_data + WRITEAPIKEY_2;
+      String post_data = "field1=";
+      post_data = post_data + String(avg_mx1, 2);
+      post_data = post_data + "&field2=";
+      post_data = post_data + String(avg_my1, 2);
+      post_data = post_data + "&field3=";
+      post_data = post_data + String(avg_mz1, 2);
+      post_data = post_data + "&field4=";
+      post_data = post_data + String(avg_ax1, 2);
+      post_data = post_data + "&field5=";
+      post_data = post_data + String(avg_ay1, 2);
+      post_data = post_data + "&field6=";
+      post_data = post_data + String(avg_az1, 2);
+      post_data = post_data + "&field7=";
+      post_data = post_data + String(avg_vibro1, 2);
+
+      Serial.println("Data to be send:");
+      Serial.println(post_data);
+
+      client.println("POST /update HTTP/1.1");
+      client.println("Host: api.thingspeak.com");
+      client.println("Connection: close");
+      client.println("X-THINGSPEAKAPIKEY: " + WRITEAPIKEY_2);
       client.println("Content-Type: application/x-www-form-urlencoded");
       client.print("Content-Length: ");
       int thisLength = post_data.length();
