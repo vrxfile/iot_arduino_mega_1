@@ -347,6 +347,25 @@ void setup()
   Serial.println("Main power counter: " + String(counter_power));
   myGLCD.print("Main power counter: " + String(counter_power), LEFT, 460, 180);
 
+  // Especially for Catholic programmers
+  Serial.println();
+  myGLCD.setColor(255, 255, 0);
+  myGLCD.print("Pater noster, qui es in caelis;", LEFT, 420, 180); Serial.println("Pater noster, qui es in caelis;");
+  myGLCD.print("sanctificetur nomen tuum;", LEFT, 400, 180); Serial.println("sanctificetur nomen tuum;");
+  myGLCD.print("adveniat regnum tuum;", LEFT, 380, 180); Serial.println("adveniat regnum tuum;");
+  myGLCD.print("fiat voluntas tua,", LEFT, 360, 180); Serial.println("fiat voluntas tua,");
+  myGLCD.print("sicut in caelo et in terra.", LEFT, 340, 180); Serial.println("sicut in caelo et in terra.");
+  myGLCD.print("Panem nostrum cotidianum da nobis hodie;", LEFT, 320, 180); Serial.println("Panem nostrum cotidianum da nobis hodie;");
+  myGLCD.print("et dimitte nobis debita nostra,", LEFT, 300, 180); Serial.println("et dimitte nobis debita nostra,");
+  myGLCD.print("sicut et nos dimittimus", LEFT, 280, 180); Serial.println("sicut et nos dimittimus");
+  myGLCD.print("debitoribus nostris;", LEFT, 260, 180); Serial.println("debitoribus nostris;");
+  myGLCD.print("et ne nos inducas in tentationem;", LEFT, 240, 180); Serial.println("et ne nos inducas in tentationem;");
+  myGLCD.print("sed libera nos a malo.", LEFT, 220, 180); Serial.println("sed libera nos a malo.");
+  Serial.println("");
+  myGLCD.print("Quia tuum est regnum,", LEFT, 180, 180); Serial.println("Quia tuum est regnum,");
+  myGLCD.print("et potestas, et gloria in saecula.", LEFT, 160, 180); Serial.println("et potestas, et gloria in saecula.");
+  myGLCD.print("Amen.", LEFT, 140, 180); Serial.println("Amen.");
+
   // Reset software watchdog
   watchdog_reset();
 }
